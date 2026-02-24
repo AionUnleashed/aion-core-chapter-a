@@ -180,3 +180,6 @@ AC-Game/libs/**/*-sources.jar
 AC-Login/libs/**/*-sources.jar
 AC-Chat/libs/**/*-sources.jar
 
+
+# Arquivos de teste temporários
+test_chat_output.txt
