@@ -72,7 +72,7 @@
         <jar destfile="${build}/AC-Login.jar">
             <fileset dir="${build.classes}"/>
             <manifest>
-                <attribute name="Main-Class" value="loginserver.LoginServer"/>
+                <attribute name="Main-Class" value="com.aionemu.loginserver.LoginServer"/>
                 <attribute name="Revision" value="${revision}"/>
                 <attribute name="Date" value="${date}"/>
             </manifest>
