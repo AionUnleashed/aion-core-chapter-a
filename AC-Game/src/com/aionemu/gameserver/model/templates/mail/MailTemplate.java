@@ -30,7 +30,7 @@
 package com.aionemu.gameserver.model.templates.mail;
 
 import com.aionemu.gameserver.model.Race;
-import org.apache.commons.lang.StringUtils;
+import org.apache.commons.lang3.StringUtils;
 
 import javax.xml.bind.Unmarshaller;
 import javax.xml.bind.annotation.*;

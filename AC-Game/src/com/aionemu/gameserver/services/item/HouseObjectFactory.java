@@ -29,7 +29,7 @@
  */
 package com.aionemu.gameserver.services.item;
 
-import org.apache.commons.lang.IncompleteArgumentException;
+import org.apache.commons.lang3.IncompleteArgumentException;
 import org.joda.time.DateTime;
 
 import com.aionemu.gameserver.dataholders.DataManager;

@@ -31,7 +31,7 @@ package com.aionemu.gameserver.model.templates.Guides;
 
 import com.aionemu.gameserver.model.PlayerClass;
 import com.aionemu.gameserver.model.Race;
-import org.apache.commons.lang.StringUtils;
+import org.apache.commons.lang3.StringUtils;
 
 import javax.xml.bind.annotation.*;
 import java.util.List;

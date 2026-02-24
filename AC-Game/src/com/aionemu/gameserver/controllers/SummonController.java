@@ -49,7 +49,7 @@ import com.aionemu.gameserver.skillengine.model.Skill;
 import com.aionemu.gameserver.taskmanager.tasks.PlayerMoveTaskManager;
 import com.aionemu.gameserver.utils.PacketSendUtility;
 import com.aionemu.gameserver.utils.ThreadPoolManager;
-import org.apache.commons.lang.NullArgumentException;
+import org.apache.commons.lang3.NullArgumentException;
 
 /**
  * @author ATracer

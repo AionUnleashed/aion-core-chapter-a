@@ -38,7 +38,7 @@ import com.aionemu.gameserver.model.templates.rewards.CraftReward;
 import com.aionemu.gameserver.model.templates.rewards.IdLevelReward;
 import javolution.util.FastMap;
 import javolution.util.FastSet;
-import org.apache.commons.lang.math.IntRange;
+import org.apache.commons.lang3.math.IntRange;
 
 import javax.xml.bind.Unmarshaller;
 import javax.xml.bind.annotation.*;

@@ -29,7 +29,7 @@
  */
 package com.aionemu.gameserver.model;
 
-import org.apache.commons.lang.NotImplementedException;
+import org.apache.commons.lang3.NotImplementedException;
 
 import javax.xml.bind.annotation.XmlEnum;
 

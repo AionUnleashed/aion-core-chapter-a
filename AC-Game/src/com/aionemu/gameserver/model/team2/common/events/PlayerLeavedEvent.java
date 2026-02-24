@@ -34,7 +34,7 @@ import com.aionemu.gameserver.model.team2.TeamEvent;
 import com.aionemu.gameserver.model.team2.TeamMember;
 import com.aionemu.gameserver.model.team2.TemporaryPlayerTeam;
 import com.google.common.base.Predicate;
-import org.apache.commons.lang.StringUtils;
+import org.apache.commons.lang3.StringUtils;
 
 /**
  * @author ATracer

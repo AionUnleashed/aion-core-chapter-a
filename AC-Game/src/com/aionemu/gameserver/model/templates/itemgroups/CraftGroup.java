@@ -31,7 +31,7 @@ package com.aionemu.gameserver.model.templates.itemgroups;
 
 import com.aionemu.gameserver.model.templates.rewards.CraftReward;
 import javolution.util.FastMap;
-import org.apache.commons.lang.math.IntRange;
+import org.apache.commons.lang3.math.IntRange;
 
 import java.util.ArrayList;
 import java.util.List;

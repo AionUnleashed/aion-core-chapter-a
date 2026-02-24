@@ -269,7 +269,7 @@ public class GameServer {
     public static void main(String[] args) {
     	
         long startTime = System.currentTimeMillis();
-        Lambda.enableJitting(true);
+        // Lambda.enableJitting(true); // Removed in lambdaj 2.3.3 - JIT optimization no longer needed
         final GameEngine[] parallelEngines = new GameEngine[]{QuestEngine.getInstance(), InstanceEngine.getInstance(),
                 											  AI2Engine.getInstance(), ChatProcessor.getInstance()};
         final CountDownLatch progressLatch = new CountDownLatch(parallelEngines.length);

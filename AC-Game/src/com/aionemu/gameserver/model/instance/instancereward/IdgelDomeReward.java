@@ -35,7 +35,7 @@ import static ch.lambdaj.Lambda.sort;
 import java.util.Comparator;
 import java.util.List;
 
-import org.apache.commons.lang.mutable.MutableInt;
+import org.apache.commons.lang3.mutable.MutableInt;
 
 import com.aionemu.commons.utils.Rnd;
 import com.aionemu.gameserver.model.Race;

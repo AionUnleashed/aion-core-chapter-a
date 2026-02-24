@@ -36,7 +36,7 @@ import com.aionemu.gameserver.network.aion.serverpackets.SM_ATTACK_STATUS.TYPE;
 import com.aionemu.gameserver.services.LifeStatsRestoreService;
 import com.aionemu.gameserver.skillengine.effect.AbnormalState;
 import com.aionemu.gameserver.utils.PacketSendUtility;
-import org.apache.commons.lang.NullArgumentException;
+import org.apache.commons.lang3.NullArgumentException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
