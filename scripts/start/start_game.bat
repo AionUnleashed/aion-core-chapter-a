@@ -9,23 +9,28 @@ echo.
 
 cd ..\..\AC-Game
 
-if not exist "build\AC-Game.jar" (
-    echo ERRO: AC-Game.jar nao encontrado em build\!
-    echo Execute scripts\build\build_all.bat primeiro.
+if not exist "target\ac-game-4.7.5.jar" (
+    echo ERRO: ac-game-4.7.5.jar nao encontrado em target\!
+    echo Execute: mvn clean package -DskipTests
+    echo Ou use: scripts\build\build_maven_all.bat
     echo.
     pause
     exit /b 1
 )
 
-if not exist "libs\ac-commons-1.3.jar" (
-    echo ERRO: ac-commons-1.3.jar nao encontrado em libs\!
-    echo Copie AC-Commons\target\ac-commons-1.3.jar para AC-Game\libs\
+REM Verifica AC-Commons
+if not exist "..\AC-Commons\target\ac-commons-4.7.5.jar" (
+    echo ERRO: AC-Commons nao encontrado!
+    echo Compile AC-Commons primeiro.
     echo.
     pause
     exit /b 1
 )
 
-set JAVA_HOME=C:\Program Files\Java\jdk1.7.0_79
+REM Usa Java 8u471
+if not defined JAVA_HOME (
+    set JAVA_HOME=C:\Program Files\Java\jdk-1.8
+)
 
 echo Iniciando Game Server...
 echo.
@@ -40,6 +45,6 @@ echo   -noverify: Desabilita verificacao de bytecode
 echo   -javaagent: Habilita sistema de callbacks
 echo.
 
-"%JAVA_HOME%\bin\java.exe" -Xms512m -Xmx4096m -server -noverify -javaagent:./libs/ac-commons-1.3.jar -cp "./libs/*;build/AC-Game.jar" com.aionemu.gameserver.GameServer
+"%JAVA_HOME%\bin\java.exe" -Xms512m -Xmx4096m -server -noverify -javaagent:../AC-Commons/target/ac-commons-4.7.5.jar -cp "target/classes;target/ac-game-4.7.5.jar;../AC-Commons/target/classes;../AC-Commons/target/ac-commons-4.7.5.jar;libs/*;target/libs/*" com.aionemu.gameserver.GameServer
 
 pause
