@@ -65,22 +65,16 @@ public class DatabaseConfig {
     public static String DATABASE_PASSWORD;
 
     /**
-     * Amount of partitions used by BoneCP
+     * Minimum number of idle connections in the pool
      */
-    @Property(key = "database.bonecp.partition.count", defaultValue = "2")
-    public static int DATABASE_BONECP_PARTITION_COUNT;
+    @Property(key = "database.hikari.minimumIdle", defaultValue = "5")
+    public static int DATABASE_HIKARI_MINIMUM_IDLE;
 
     /**
-     * Minimum amount of connections that are always active in bonecp partition
+     * Maximum pool size (total connections)
      */
-    @Property(key = "database.bonecp.partition.connections.min", defaultValue = "2")
-    public static int DATABASE_BONECP_PARTITION_CONNECTIONS_MIN;
-
-    /**
-     * Maximum amount of connections that are allowed to use in bonecp partition
-     */
-    @Property(key = "database.bonecp.partition.connections.max", defaultValue = "5")
-    public static int DATABASE_BONECP_PARTITION_CONNECTIONS_MAX;
+    @Property(key = "database.hikari.maximumPoolSize", defaultValue = "20")
+    public static int DATABASE_HIKARI_MAXIMUM_POOL_SIZE;
 
     /**
      * Location of database script context descriptor

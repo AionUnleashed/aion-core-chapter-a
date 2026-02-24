@@ -38,6 +38,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import javax.xml.bind.JAXBException;
+import java.io.File;
 import java.io.FileNotFoundException;
 import java.util.HashMap;
 import java.util.Map;
@@ -73,16 +74,82 @@ public class DAOManager {
      */
     public static void init() {
         try {
+            // Load pre-compiled DAO JAR if exists (to avoid runtime compilation issues)
+            File precompiledJar = new File("libs/ac-game-daos-precompiled.jar");
+            boolean hasPrecompiledJar = precompiledJar.exists();
+            java.net.URLClassLoader precompiledLoader = null;
+            
+            if (hasPrecompiledJar) {
+                try {
+                    java.net.URL jarUrl = precompiledJar.toURI().toURL();
+                    precompiledLoader = new java.net.URLClassLoader(
+                        new java.net.URL[]{jarUrl}, 
+                        Thread.currentThread().getContextClassLoader()
+                    );
+                    Thread.currentThread().setContextClassLoader(precompiledLoader);
+                    log.info("Loaded pre-compiled DAO JAR: " + precompiledJar.getAbsolutePath());
+                } catch (Exception e) {
+                    log.warn("Failed to load pre-compiled DAO JAR: " + e.getMessage());
+                    hasPrecompiledJar = false;
+                }
+            }
+            
             scriptManager = new ScriptManager();
 
             // initialize default class listeners for this ScriptManager
             AggregatedClassListener acl = new AggregatedClassListener();
             acl.addClassListener(new OnClassLoadUnloadListener());
             acl.addClassListener(new ScheduledTaskClassListener());
-            acl.addClassListener(new DAOLoader());
+            DAOLoader daoLoader = new DAOLoader();
+            acl.addClassListener(daoLoader);
             scriptManager.setGlobalClassListener(acl);
 
             scriptManager.load(DatabaseConfig.DATABASE_SCRIPTCONTEXT_DESCRIPTOR);
+            
+            log.info("After script load, daoMap size: {}", daoMap.size());
+            
+            // If pre-compiled JAR was loaded but no DAOs were registered (empty compilation), load manually
+            if (hasPrecompiledJar && daoMap.size() == 0 && precompiledLoader != null) {
+                log.info("No DAOs from script compilation, loading from pre-compiled JAR...");
+                try {
+                    java.util.List<Class<?>> daoClasses = new java.util.ArrayList<>();
+                    java.util.jar.JarFile jar = new java.util.jar.JarFile(precompiledJar);
+                    java.util.Enumeration<java.util.jar.JarEntry> entries = jar.entries();
+                    
+                    int classCount = 0;
+                    while (entries.hasMoreElements()) {
+                        java.util.jar.JarEntry entry = entries.nextElement();
+                        String name = entry.getName();
+                        if (name.endsWith(".class") && !name.contains("$")) {
+                            classCount++;
+                            String className = name.replace('/', '.').substring(0, name.length() - 6);
+                            try {
+                                Class<?> clazz = precompiledLoader.loadClass(className);
+                                if (daoLoader.isValidDAO(clazz)) {
+                                    daoClasses.add(clazz);
+                                    log.debug("Found valid DAO class: {}", className);
+                                }
+                            } catch (Exception e) {
+                                log.debug("Skipping class {}: {}", className, e.getMessage());
+                            }
+                        }
+                    }
+                    jar.close();
+                    
+                    log.info("Scanned {} classes from JAR, found {} valid DAOs", classCount, daoClasses.size());
+                    
+                    if (!daoClasses.isEmpty()) {
+                        Class<?>[] classArray = daoClasses.toArray(new Class<?>[0]);
+                        daoLoader.postLoad(classArray);
+                        log.info("Loaded {} DAO classes from pre-compiled JAR", daoClasses.size());
+                    }
+                } catch (Exception e) {
+                    log.error("Failed to load DAOs from pre-compiled JAR", e);
+                }
+            } else {
+                log.info("Skipping manual DAO load: hasPrecompiledJar={}, daoMap.size={}, precompiledLoader!=null={}", 
+                         hasPrecompiledJar, daoMap.size(), (precompiledLoader != null));
+            }
         } catch (RuntimeException e) {
             throw new Error(e.getMessage(), e);
         } catch (FileNotFoundException e) {

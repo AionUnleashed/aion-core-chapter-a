@@ -30,8 +30,8 @@
 package com.aionemu.commons.database;
 
 import com.aionemu.commons.configs.DatabaseConfig;
-import com.jolbox.bonecp.BoneCP;
-import com.jolbox.bonecp.BoneCPConfig;
+import com.zaxxer.hikari.HikariConfig;
+import com.zaxxer.hikari.HikariDataSource;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -64,7 +64,7 @@ public class DatabaseFactory {
     /**
      * Connection Pool holds all connections - Idle or Active
      */
-    private static BoneCP connectionPool;
+    private static HikariDataSource connectionPool;
 
     /**
      * Returns name of the database that is used For isntance, MySQL returns
@@ -99,23 +99,24 @@ public class DatabaseFactory {
             throw new Error("DB Driver doesnt exist!");
         }
 
-        if (DatabaseConfig.DATABASE_BONECP_PARTITION_CONNECTIONS_MIN > DatabaseConfig.DATABASE_BONECP_PARTITION_CONNECTIONS_MAX) {
-            log.error("Please check your database configuration. Minimum amount of connections is > maximum");
-            DatabaseConfig.DATABASE_BONECP_PARTITION_CONNECTIONS_MAX = DatabaseConfig.DATABASE_BONECP_PARTITION_CONNECTIONS_MIN;
+        if (DatabaseConfig.DATABASE_HIKARI_MINIMUM_IDLE > DatabaseConfig.DATABASE_HIKARI_MAXIMUM_POOL_SIZE) {
+            log.error("Please check your database configuration. Minimum idle connections is > maximum pool size");
+            DatabaseConfig.DATABASE_HIKARI_MAXIMUM_POOL_SIZE = DatabaseConfig.DATABASE_HIKARI_MINIMUM_IDLE;
         }
 
-        BoneCPConfig config = new BoneCPConfig();
-        config.setPartitionCount(DatabaseConfig.DATABASE_BONECP_PARTITION_COUNT);
-        config.setMinConnectionsPerPartition(DatabaseConfig.DATABASE_BONECP_PARTITION_CONNECTIONS_MIN);
-        config.setMaxConnectionsPerPartition(DatabaseConfig.DATABASE_BONECP_PARTITION_CONNECTIONS_MAX);
+        HikariConfig config = new HikariConfig();
+        config.setJdbcUrl(DatabaseConfig.DATABASE_URL);
         config.setUsername(DatabaseConfig.DATABASE_USER);
         config.setPassword(DatabaseConfig.DATABASE_PASSWORD);
-        config.setJdbcUrl(DatabaseConfig.DATABASE_URL);
-        config.setDisableJMX(true);
+        config.setMinimumIdle(DatabaseConfig.DATABASE_HIKARI_MINIMUM_IDLE);
+        config.setMaximumPoolSize(DatabaseConfig.DATABASE_HIKARI_MAXIMUM_POOL_SIZE);
+        config.setConnectionTimeout(30000); // 30 seconds
+        config.setIdleTimeout(600000); // 10 minutes
+        config.setMaxLifetime(1800000); // 30 minutes
 
         try {
-            connectionPool = new BoneCP(config);
-        } catch (SQLException e) {
+            connectionPool = new HikariDataSource(config);
+        } catch (Exception e) {
             log.error("Error while creating DB Connection pool", e);
             throw new Error("DatabaseFactory not initialized!", e);
         }
@@ -167,7 +168,7 @@ public class DatabaseFactory {
      * @return int Active DB Connections
      */
     public int getActiveConnections() {
-        return connectionPool.getTotalLeased();
+        return connectionPool.getHikariPoolMXBean().getActiveConnections();
     }
 
     /**
@@ -179,7 +180,7 @@ public class DatabaseFactory {
      * @return int Idle DB Connections
      */
     public int getIdleConnections() {
-        return connectionPool.getStatistics().getTotalFree();
+        return connectionPool.getHikariPoolMXBean().getIdleConnections();
     }
 
     /**
@@ -187,7 +188,7 @@ public class DatabaseFactory {
      */
     public static synchronized void shutdown() {
         try {
-            connectionPool.shutdown();
+            connectionPool.close();
         } catch (Exception e) {
             log.warn("Failed to shutdown DatabaseFactory", e);
         }

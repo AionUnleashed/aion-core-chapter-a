@@ -32,7 +32,6 @@ package com.aionemu.commons.scripting.impl.javacompiler;
 import com.aionemu.commons.scripting.CompilationResult;
 import com.aionemu.commons.scripting.ScriptClassLoader;
 import com.aionemu.commons.scripting.ScriptCompiler;
-import com.sun.tools.javac.api.JavacTool;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -78,12 +77,57 @@ public class ScriptCompilerImpl implements ScriptCompiler {
      * @throws RuntimeException if compiler is not available
      */
     public ScriptCompilerImpl() {
-        this.javaCompiler = JavacTool.create();
+        javax.tools.JavaCompiler compiler = null;
+        
+        // Force Java 8 compiler by loading tools.jar from JAVA_HOME if available
+        String javaHome = System.getProperty("java.home");
+        log.info("ScriptCompiler: java.home=" + javaHome);
+        
+        if (javaHome != null) {
+            File toolsJar = null;
+            
+            // If java.home points to JRE, go up to JDK
+            if (javaHome.endsWith("jre")) {
+                toolsJar = new File(javaHome, "../lib/tools.jar");
+            } else {
+                toolsJar = new File(javaHome, "lib/tools.jar");
+            }
+            
+            log.info("ScriptCompiler: Looking for tools.jar at: " + toolsJar.getAbsolutePath());
+            
+            if (toolsJar.exists()) {
+                try {
+                    java.net.URL url = toolsJar.toURI().toURL();
+                    java.net.URLClassLoader loader = new java.net.URLClassLoader(
+                        new java.net.URL[]{url}, 
+                        ClassLoader.getSystemClassLoader()
+                    );
+                    Class<?> toolProviderClass = loader.loadClass("javax.tools.ToolProvider");
+                    java.lang.reflect.Method method = toolProviderClass.getMethod("getSystemJavaCompiler");
+                    compiler = (javax.tools.JavaCompiler) method.invoke(null);
+                    if (compiler != null) {
+                        log.info("Loaded JavaCompiler from tools.jar: " + toolsJar.getAbsolutePath());
+                    } else {
+                        log.warn("tools.jar loaded but getSystemJavaCompiler() returned null");
+                    }
+                } catch (Exception e) {
+                    log.warn("Failed to load JavaCompiler from tools.jar: " + e.getMessage());
+                }
+            } else {
+                log.warn("tools.jar not found at: " + toolsJar.getAbsolutePath());
+            }
+        }
+        
+        // Fallback to system compiler
+        if (compiler == null) {
+            log.info("ScriptCompiler: Falling back to ToolProvider.getSystemJavaCompiler()");
+            compiler = ToolProvider.getSystemJavaCompiler();
+        }
+
+        this.javaCompiler = compiler;
 
         if (javaCompiler == null) {
-            if (ToolProvider.getSystemJavaCompiler() != null) {
-                throw new RuntimeException(new InstantiationException("JavaCompiler is not aviable."));
-            }
+            throw new RuntimeException(new InstantiationException("JavaCompiler is not available. Make sure you are running with a JDK (not JRE)."));
         }
     }
 
@@ -175,9 +219,10 @@ public class ScriptCompilerImpl implements ScriptCompiler {
      * @throws RuntimeException if compilation failed with errros
      */
     protected CompilationResult doCompilation(Iterable<JavaFileObject> compilationUnits) {
+        // Using default source/target to avoid conflicts with system Java compiler version
         List<String> options = Arrays.asList("-encoding", "UTF-8", "-g");
         DiagnosticListener<JavaFileObject> listener = new ErrorListener();
-        ClassFileManager manager = new ClassFileManager(JavacTool.create(), listener);
+        ClassFileManager manager = new ClassFileManager(javaCompiler, listener);
         manager.setParentClassLoader(parentClassLoader);
 
         if (libraries != null) {

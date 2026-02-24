@@ -30,6 +30,7 @@
 package com.aionemu.commons.scripting.impl;
 
 import com.aionemu.commons.scripting.CompilationResult;
+import com.aionemu.commons.scripting.ScriptClassLoader;
 import com.aionemu.commons.scripting.ScriptCompiler;
 import com.aionemu.commons.scripting.ScriptContext;
 import com.aionemu.commons.scripting.classlistener.AggregatedClassListener;
@@ -145,12 +146,19 @@ public class ScriptContextImpl implements ScriptContext {
 
         Collection<File> files = FileUtils.listFiles(root, scriptCompiler.getSupportedFileTypes(), true);
 
-        if (parentScriptContext != null) {
-            scriptCompiler.setParentClassLoader(parentScriptContext.getCompilationResult().getClassLoader());
-        }
+        // Skip compilation if no source files found (classes may be pre-compiled in JARs)
+        if (files == null || files.isEmpty()) {
+            log.info("No source files found in " + root + ", skipping compilation (using pre-compiled classes)");
+            ScriptClassLoader parentLoader = (parentScriptContext != null) ? parentScriptContext.getCompilationResult().getClassLoader() : null;
+            compilationResult = new CompilationResult(new Class<?>[0], parentLoader);
+        } else {
+            if (parentScriptContext !=null) {
+                scriptCompiler.setParentClassLoader(parentScriptContext.getCompilationResult().getClassLoader());
+            }
 
-        scriptCompiler.setLibraires(libraries);
-        compilationResult = scriptCompiler.compile(files);
+            scriptCompiler.setLibraires(libraries);
+            compilationResult = scriptCompiler.compile(files);
+        }
 
         getClassListener().postLoad(compilationResult.getCompiledClasses());
 

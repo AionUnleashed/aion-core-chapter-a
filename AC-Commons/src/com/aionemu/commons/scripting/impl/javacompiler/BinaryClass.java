@@ -29,12 +29,9 @@
  */
 package com.aionemu.commons.scripting.impl.javacompiler;
 
-import com.sun.tools.javac.file.BaseFileObject;
-
+import javax.tools.SimpleJavaFileObject;
 import java.io.*;
 import java.net.URI;
-
-//import com.sun.tools.javac.file.BaseFileObject;
 
 /**
  * This class is just a hack to make javac compiler work with classes loaded by
@@ -42,7 +39,7 @@ import java.net.URI;
  *
  * @author SoulKeeper
  */
-public class BinaryClass extends BaseFileObject {
+public class BinaryClass extends SimpleJavaFileObject {
 
     /**
      * ClassName
@@ -65,30 +62,27 @@ public class BinaryClass extends BaseFileObject {
      * @param name class name
      */
     protected BinaryClass(String name) {
-        super(null);
+        super(URI.create("string:///" + name.replace('.', '/') + Kind.CLASS.extension), Kind.CLASS);
         this.name = name;
     }
 
     /**
-     * Throws {@link UnsupportedOperationException}
+     * Returns URI of this file object
      *
-     * @return nothing
+     * @return URI
      */
     @Override
     public URI toUri() {
-        throw new UnsupportedOperationException();
+        return uri;
     }
 
     /**
      * Returns name of this class with ".class" suffix
      *
      * @return name of this class with ".class" suffix
-     * @deprecated
      */
-    @Deprecated
-    @Override
-    public String getName() {
-        return name + ".class";
+    public String getClassName() {
+        return name;
     }
 
     /**
@@ -151,17 +145,6 @@ public class BinaryClass extends BaseFileObject {
     @Override
     public boolean delete() {
         return false;
-    }
-
-    /**
-     * Returns class name
-     *
-     * @param path doesn't matter
-     * @return class name
-     */
-    @Override
-    protected String inferBinaryName(Iterable<? extends File> path) {
-        return name;
     }
 
     /**
